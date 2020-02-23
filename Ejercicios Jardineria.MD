@@ -72,11 +72,37 @@ Resuelva todas las consultas utilizando la sintaxis de SQL1 y SQL2. Las consulta
 ```
 
 5. Devuelve el nombre de los clientes que no hayan hecho pagos y el nombre de sus representantes junto con la ciudad de la oficina a la que pertenece el representante.
+   ```sql
+    select cliente.nombre_cliente "Cliente sin Pagos", CONCAT(empleado.nombre, empleado.apellido1) "Responsable Ventas", oficina.ciudad "Ciudad"  
+    from cliente 
+    left join empleado on cliente.codigo_empleado_rep_ventas = empleado.codigo_empleado
+    left join oficina on empleado.codigo_oficina = oficina.codigo_oficina
+    where codigo_cliente not in (select pago.codigo_cliente from pago)  
+    group by cliente.nombre_cliente, empleado.nombre, empleado.apellido1, oficina.ciudad 
+    order by cliente.nombre_cliente asc;
+   ```
+
 6. Lista la dirección de las oficinas que tengan clientes en Fuenlabrada.
+   ```sql
+   select CONCAT(oficina.linea_direccion1, " ",oficina.linea_direccion2) "Dirección de la oficina" from empleado
+   right join cliente on empleado.codigo_empleado = cliente.codigo_empleado_rep_ventas
+   left join oficina on empleado.codigo_oficina = oficina.codigo_oficina 
+   where cliente.ciudad = "Fuenlabrada"
+   group by oficina.linea_direccion1, oficina.linea_direccion2 ;
+   ```
 7. Devuelve el nombre de los clientes y el nombre de sus representantes junto con la ciudad de la oficina a la que pertenece el representante.
+   ```sql
+   select cliente.codigo_cliente, cliente.nombre_cliente "Cliente", CONCAT(empleado.nombre," ", empleado.apellido1) "Responsable Ventas", oficina.ciudad "Ciudad"  
+    from cliente 
+    left join empleado on cliente.codigo_empleado_rep_ventas = empleado.codigo_empleado
+    left join oficina on empleado.codigo_oficina = oficina.codigo_oficina
+    group by cliente.codigo_cliente, cliente.nombre_cliente, empleado.nombre, empleado.apellido1, oficina.ciudad 
+    order by cliente.codigo_cliente asc;
+   ```
 8. Devuelve un listado con el nombre de los empleados junto con el nombre de sus jefes.
-9. Devuelve el nombre de los clientes a los que no se les ha entregado a tiempo un pedido.
+9.  Devuelve el nombre de los clientes a los que no se les ha entregado a tiempo un pedido.
 10. Devuelve un listado de las diferentes gamas de producto que ha comprado cada cliente.
+
 #### 2.1. Consultas multitabla (Composición externa)
 Resuelva todas las consultas utilizando las cláusulas LEFT JOIN, RIGHT JOIN, NATURAL LEFT JOIN y NATURAL RIGHT JOIN.
 
