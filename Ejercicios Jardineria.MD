@@ -100,8 +100,27 @@ Resuelva todas las consultas utilizando la sintaxis de SQL1 y SQL2. Las consulta
     order by cliente.codigo_cliente asc;
    ```
 8. Devuelve un listado con el nombre de los empleados junto con el nombre de sus jefes.
-9.  Devuelve el nombre de los clientes a los que no se les ha entregado a tiempo un pedido.
-10. Devuelve un listado de las diferentes gamas de producto que ha comprado cada cliente.
+```sql
+   select e.codigo_empleado, concat(e.apellido1, ", ", e.nombre ) , e.codigo_jefe, concat(jefe.apellido1, ", ", jefe.nombre )
+from empleado e
+left join empleado jefe on e.codigo_jefe = jefe.codigo_empleado
+group by e.codigo_jefe, e.codigo_empleado ;
+   ```
+10. Devuelve el nombre de los clientes a los que no se les ha entregado a tiempo un pedido.
+```sql
+select cliente.codigo_cliente, cliente.nombre_cliente from cliente 
+left join pedido on cliente.codigo_cliente = pedido.codigo_cliente
+where fecha_entrega > fecha_esperada
+group by cliente.codigo_cliente, cliente.nombre_cliente;
+```
+11. Devuelve un listado de las diferentes gamas de producto que ha comprado cada cliente.
+```sql
+select cliente.codigo_cliente, producto.gama from pedido 
+left join cliente on pedido.codigo_cliente = cliente.codigo_cliente 
+left join detalle_pedido on pedido.codigo_pedido = detalle_pedido.codigo_pedido 
+left join producto on detalle_pedido.codigo_producto = producto.codigo_producto
+group by cliente.codigo_cliente, producto.gama ;
+```
 
 #### 2.1. Consultas multitabla (Composición externa)
 Resuelva todas las consultas utilizando las cláusulas LEFT JOIN, RIGHT JOIN, NATURAL LEFT JOIN y NATURAL RIGHT JOIN.
