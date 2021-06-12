@@ -273,5 +273,9 @@ Devuelve el nombre del cliente, el nombre y primer apellido de su representante 
 ```
 
 Devuelve el listado de clientes donde aparezca el nombre del cliente, el nombre y primer apellido de su representante de ventas y la ciudad donde está su oficina.
-Devuelve el nombre, apellidos, puesto y teléfono de la oficina de aquellos empleados que no sean representante de ventas de ningún cliente.
-Devuelve un listado indicando todas las ciudades donde hay oficinas y el número de empleados que tiene.
+Devuelve el nombre, apellidos, puesto y teléfono de la oficina de aquellos empleados que no sean representante de ventas de ningún cliente.  
+Devuelve un listado indicando todas las ciudades donde hay oficinas y el número de empleados que tiene.  
+```
+select o.ciudad, count(e.codigo_empleado) from oficina o
+left join empleado e on e.codigo_oficina = o.codigo_oficina group by o.ciudad;
+```
