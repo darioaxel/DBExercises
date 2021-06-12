@@ -131,9 +131,17 @@ select cliente.codigo_cliente, nombre_cliente from cliente left join pago on cli
 group by codigo_cliente, nombre_cliente;
 ```
 Devuelve un listado que muestre solamente los clientes que no han realizado ningún pedido.
-
+```
+select cliente.codigo_cliente , nombre_cliente from cliente left join pedido on cliente.codigo_cliente = pedido.codigo_cliente where pedido.codigo_cliente is null;
+```
 Devuelve un listado que muestre los clientes que no han realizado ningún pago y los que no han realizado ningún pedido.
 
+```
+select cliente.codigo_cliente , nombre_cliente from cliente 
+left join pedido on cliente.codigo_cliente = pedido.codigo_cliente
+left join pago on cliente.codigo_cliente = pago.codigo_cliente where pago.codigo_cliente is null and pedido.codigo_cliente is null
+group by codigo_cliente, nombre_cliente;
+```
 Devuelve un listado que muestre solamente los empleados que no tienen una oficina asociada.
 
 Devuelve un listado que muestre solamente los empleados que no tienen un cliente asociado.
@@ -143,11 +151,30 @@ Devuelve un listado que muestre los empleados que no tienen una oficina asociada
 Devuelve un listado de los productos que nunca han aparecido en un pedido.
 
 Devuelve las oficinas donde no trabajan ninguno de los empleados que hayan sido los representantes de ventas de algún cliente que haya realizado la compra de algún producto de la gama Frutales.
-
+```
+select oficina.codigo_oficina, oficina.ciudad from oficina 
+left join empleado e on e.codigo_oficina = oficina.codigo_oficina 
+left join cliente c on c.codigo_empleado_rep_ventas = e.codigo_empleado
+left join pedido on pedido.codigo_cliente = c.codigo_cliente 
+left join detalle_pedido dp on pedido.codigo_pedido = dp.codigo_pedido 
+left join producto p on dp.codigo_producto = p.codigo_producto 
+left join gama_producto g on p.gama = g.gama
+where g.gama NOT LIKE("Frutales") group by codigo_oficina, ciudad;
+```
 Devuelve un listado con los clientes que han realizado algún pedido pero no han realizado ningún pago. 
-
+```
+select * from cliente c
+left join pedido p on p.codigo_cliente = c.codigo_cliente 
+left join pago pa on pa.codigo_cliente = c.codigo_cliente 
+where p.codigo_pedido is not null and pa.codigo_cliente is null group by nombre_cliente;
+```
 Devuelve un listado con los datos de los empleados que no tienen clientes asociados y el nombre de su jefe asociado. 
-
+```
+select e.codigo_empleado empleado, e.nombre nombre, e.apellido1 apellido, e2.codigo_empleado codigo_jefe, e2.nombre nombre_jefe, e2.apellido1 apellido_jefe from empleado e
+left join cliente c on c.codigo_empleado_rep_ventas = e.codigo_empleado 
+left join empleado e2 on e.codigo_jefe = e2.codigo_empleado 
+where c.codigo_cliente is null;
+```
 ### 3. Consultas resumen
 
 ¿Cuántos empleados hay en la compañía? 
@@ -183,11 +210,22 @@ La misma información que en la pregunta anterior, pero agrupada por código d
 Lista las ventas totales de los productos que hayan facturado más de 3000 euros. Se mostrará el nombre, unidades vendidas, total facturado y total facturado con impuestos (21% IVA).
 ### 4. Subconsultas
 #### 4.1 Con operadores básicos de comparación
-Devuelve el nombre del cliente con mayor límite de crédito.
-Devuelve el nombre del producto que tenga el precio de venta más caro.
-Devuelve el nombre del producto del que se han vendido más unidades. (Tenga en cuenta que tendrá que calcular cuál es el número total de unidades que se han vendido de cada producto a partir de los datos de la tabla detalle_pedido. Una vez que sepa cuál es el código del producto, puede obtener su nombre fácilmente.)
-Los clientes cuyo límite de crédito sea mayor que los pagos que haya realizado. (Sin utilizar INNER JOIN).
-Devuelve el producto que más unidades tiene en stock.
+Devuelve el nombre del cliente con mayor límite de crédito.  
+```
+select c.nombre_cliente, c.limite_credito from cliente c
+where c.limite_credito >= all (select c2.limite_credito from cliente c2);
+```
+Devuelve el nombre del producto que tenga el precio de venta más caro. 
+
+
+Devuelve el nombre del producto del que se han vendido más unidades. (Tenga en cuenta que tendrá que calcular cuál es el número total de unidades que se han vendido de cada producto a partir de los datos de la tabla detalle_pedido. Una vez que sepa cuál es el código del producto, puede obtener su nombre fácilmente.)  
+
+
+Los clientes cuyo límite de crédito sea mayor que los pagos que haya realizado. (Sin utilizar INNER JOIN).  
+
+
+Devuelve el producto que más unidades tiene en stock.  
+
 Devuelve el producto que menos unidades tiene en stock.
 Devuelve el nombre, los apellidos y el email de los empleados que están a cargo de Alberto Soria.
 #### 4.2 Subconsultas con ALL y ANY
@@ -209,10 +247,31 @@ Devuelve un listado de los productos que nunca han aparecido en un pedido.
 Devuelve un listado de los productos que han aparecido en un pedido alguna vez.
 1.4.8.5 Subconsultas correlacionadas
 ### 5. Consultas variadas
-Devuelve el listado de clientes indicando el nombre del cliente y cuántos pedidos ha realizado. Tenga en cuenta que pueden existir clientes que no han realizado ningún pedido.
-Devuelve un listado con los nombres de los clientes y el total pagado por cada uno de ellos. Tenga en cuenta que pueden existir clientes que no han realizado ningún pago.
-Devuelve el nombre de los clientes que hayan hecho pedidos en 2008 ordenados alfabéticamente de menor a mayor.
+Devuelve el listado de clientes indicando el nombre del cliente y cuántos pedidos ha realizado. Tenga en cuenta que pueden existir clientes que no han realizado ningún pedido.  
+```
+select c.nombre_cliente , count(p.codigo_pedido) from cliente c
+left join pedido p on p.codigo_cliente = c.codigo_cliente where p.codigo_pedido is not null group by c.nombre_cliente order by c.nombre_cliente 
+```
+Devuelve un listado con los nombres de los clientes y el total pagado por cada uno de ellos. Tenga en cuenta que pueden existir clientes que no han realizado ningún pago.  
+```
+select c.nombre_cliente, sum(p.total) from cliente c
+left join pago p on p.codigo_cliente = c.codigo_cliente where p.codigo_cliente is not null group by c.nombre_cliente;
+```
+Devuelve el nombre de los clientes que hayan hecho pedidos en 2008 ordenados alfabéticamente de menor a mayor.  
+```
+select c.nombre_cliente, p.codigo_pedido, p.fecha_pedido from cliente c
+left join pedido p on c.codigo_cliente = p.codigo_cliente 
+where YEAR(p.fecha_pedido) = '2008' order by c.nombre_cliente desc;
+```
 Devuelve el nombre del cliente, el nombre y primer apellido de su representante de ventas y el número de teléfono de la oficina del representante de ventas, de aquellos clientes que no hayan realizado ningún pago.
+```
+ select c.nombre_cliente, e.nombre , e.apellido1 , o.ciudad , o.telefono from cliente c
+ left join empleado e on c.codigo_empleado_rep_ventas = e.codigo_empleado 
+ left join oficina o on e.codigo_oficina = o.codigo_oficina 
+ left join pago p on c.codigo_cliente = p.codigo_cliente 
+ where p.codigo_cliente is null;
+```
+
 Devuelve el listado de clientes donde aparezca el nombre del cliente, el nombre y primer apellido de su representante de ventas y la ciudad donde está su oficina.
 Devuelve el nombre, apellidos, puesto y teléfono de la oficina de aquellos empleados que no sean representante de ventas de ningún cliente.
 Devuelve un listado indicando todas las ciudades donde hay oficinas y el número de empleados que tiene.
